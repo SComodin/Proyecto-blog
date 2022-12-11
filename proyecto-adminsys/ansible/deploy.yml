@@ -1,0 +1,34 @@
+- hosts: all
+  gather_facts: false
+  vars_files:
+    - vars.yml
+
+  tasks:
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html
+    - name: Clone/pull project repo
+      git:
+        repo: https://github.com/SComodin/my_first_blog.git
+        dest: /home/juanmanuel/my_first_blog
+    
+    - name: Creaar un venv e instalar requirements
+      pip:
+        requirements: "{{project_path}}/requirements.txt"
+        virtualenv: "{{project_path}}/.venv"
+
+    -name: Dar permisos a manage.py
+    file:
+      path: "{{project_path}}/manage.py"
+      mode: 0777
+    
+    -name: Hacer migraciones
+      community.general.django_manage:
+        command: migrate
+        project_path: "{{project_path}}"
+        virtual_env: "{{project_path}}/.venv"
+    
+    -name: Cargar datos iniciales
+      django_manage:
+        command: loaddata
+        project_path: "{{project_path}}"
+        virtual_env: "{{project_path}}/.venv"
+        fixtures: "{{project_path}}/fixtures/my_first_blog.json"
